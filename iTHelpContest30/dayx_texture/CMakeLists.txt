@@ -1,0 +1,4 @@
+add_executable(DayX_Texture WIN32 main.cpp)
+target_compile_features(DayX_Texture PRIVATE cxx_std_20)
+target_link_libraries(DayX_Texture PRIVATE MyDXEngineSDK::MyDXEngineSDK)
+copy_runtime_dependencies(DayX_Texture)

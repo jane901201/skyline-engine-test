@@ -1,0 +1,5 @@
+add_executable(SkylineRhiTests pipeline_desc_test.cpp pipeline_header_test.cpp binding_layout_test.cpp binding_serialization_test.cpp)
+target_compile_features(SkylineRhiTests PRIVATE cxx_std_20)
+target_link_libraries(SkylineRhiTests PRIVATE Catch2::Catch2WithMain MyDXEngineSDK::MyDXEngineSDK)
+copy_runtime_dependencies(SkylineRhiTests)
+catch_discover_tests(SkylineRhiTests PROPERTIES LABELS "rhi")

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "dependencies": [
+    "assimp",
+    {
+      "name": "directx-dxc",
+      "host": true
+    },
+    "directx-dxc",
+    "directx-headers",
+    "directx12-agility",
+    "directxmath",
+    "directxtk12",
+    "glog",
+    {
+      "name": "imgui",
+      "features": [
+        "dx12-binding",
+        "win32-binding"
+      ]
+    },
+    {
+      "name": "tracy",
+      "features": [
+        "gui-tools"
+      ]
+    },
+    "winpixevent",
+    "catch2"
+  ]
+}

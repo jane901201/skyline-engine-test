@@ -1,0 +1,29 @@
+# CMake build output
+/out/
+/cmake-build-*/
+
+# IDE-local configuration
+/.idea/
+**/.vs/
+
+
+# User-specific CMake presets
+/CMakeUserPresets.json
+
+# Temporary diagnostics
+/TempScreenshot.png
+/asan_*.txt
+
+# Compiler-generated files
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.exe
+
+vcpkg_installed/
+out/
+
+# Blender 自動備份檔案
+*.blend[0-9]*
