@@ -34,6 +34,8 @@ jobs:
       - name: Check out source and dependencies
         uses: actions/checkout@v7
         with:
+          # vcpkg 需要歷史提交中的套件基準與版本資料。
+          fetch-depth: 0
           submodules: recursive
           persist-credentials: false
 
@@ -43,6 +45,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
           $revision = git -C $env:VCPKG_ROOT rev-parse HEAD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $configuration = Get-Content -Raw vcpkg-configuration.json | ConvertFrom-Json
+          $baseline = $configuration.'default-registry'.baseline
+          git -C $env:VCPKG_ROOT cat-file -e "${baseline}:versions/baseline.json"
+          if ($LASTEXITCODE -ne 0) {
+            throw "The required vcpkg baseline $baseline is missing from the checkout."
+          }
           "revision=$revision" >> $env:GITHUB_OUTPUT
 
       - name: Cache vcpkg binary packages
