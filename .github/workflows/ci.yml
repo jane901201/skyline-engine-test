@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_test:
+    name: Windows ${{ matrix.preset }}
+    runs-on: windows-2022
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [x64-Debug, x64-Release]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/out/vcpkg_binary_cache
+      BUILD_DIR: out/build/${{ matrix.preset }}
+      CMAKE_BUILD_PARALLEL_LEVEL: 2
+
+    steps:
+      - name: Check out source and dependencies
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Prepare vcpkg cache
+        id: vcpkg
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          $revision = git -C $env:VCPKG_ROOT rev-parse HEAD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "revision=$revision" >> $env:GITHUB_OUTPUT
+
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: windows-2022-x64-${{ matrix.preset }}-vcpkg-${{ steps.vcpkg.outputs.revision }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            windows-2022-x64-${{ matrix.preset }}-vcpkg-${{ steps.vcpkg.outputs.revision }}-
+
+      - name: Bootstrap vcpkg
+        run: |
+          & "$env:VCPKG_ROOT/bootstrap-vcpkg.bat" -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Configure, build, and test
+        env:
+          CMAKE_PRESET: ${{ matrix.preset }}
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $installation = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or -not $installation) {
+            throw 'Visual Studio with the x64 C++ tools is required.'
+          }
+          & "$installation/Common7/Tools/Launch-VsDevShell.ps1" -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+
+          New-Item -ItemType Directory -Force -Path $env:BUILD_DIR | Out-Null
+          cmake --preset $env:CMAKE_PRESET -DBUILD_TESTING=ON -DSKYLINE_ENABLE_TRACY=OFF 2>&1 |
+            Tee-Object -FilePath "$env:BUILD_DIR/configure.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          cmake --build $env:BUILD_DIR 2>&1 |
+            Tee-Object -FilePath "$env:BUILD_DIR/build.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # 繪圖測試尚未提供 WARP 備援，因此僅在具備適當 GPU 的環境執行。
+          ctest --test-dir $env:BUILD_DIR --output-on-failure --no-tests=error -LE gpu --timeout 120 --output-junit test_results.xml 2>&1 |
+            Tee-Object -FilePath "$env:BUILD_DIR/test.log"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: diagnostics-${{ matrix.preset }}
+          path: |
+            ${{ env.BUILD_DIR }}/*.log
+            ${{ env.BUILD_DIR }}/test_results.xml
+            ${{ env.BUILD_DIR }}/Testing/Temporary/
+            ${{ env.BUILD_DIR }}/CMakeFiles/CMakeConfigureLog.yaml
+            vcpkg/buildtrees/**/*.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v7
+        with:
+          name: skyline-engine-${{ matrix.preset }}
+          path: |
+            ${{ env.BUILD_DIR }}/bin/
+            ${{ env.BUILD_DIR }}/lib/
+          if-no-files-found: error
+          retention-days: 7
