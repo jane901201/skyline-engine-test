@@ -73,6 +73,29 @@ std::vector<Geometry> loadGeometry(const std::string& path)
     }
     return result;
 }
+
+// 將已驗證的幾何資料上傳到 GPU，FBX 載入與程式碼建構共用
+std::vector<RhiMesh> uploadGeometry(Skyline::RHI::Device& device, const std::vector<Geometry>& geometry)
+{
+    using namespace Skyline::RHI;
+    auto commands = device.createCommandContext();
+    commands->begin();
+    std::vector<RhiMesh> meshes;
+    for (const auto& source : geometry)
+    {
+        const auto vertices = std::as_bytes(std::span{source.vertices});
+        const auto indices = std::as_bytes(std::span{source.indices});
+        RhiMesh mesh;
+        mesh.vertices = device.createBuffer({vertices.size(), BufferUsage::Vertex | BufferUsage::CopyDestination});
+        mesh.indices = device.createBuffer({indices.size(), BufferUsage::Index | BufferUsage::CopyDestination});
+        commands->uploadBuffer(*mesh.vertices, 0, vertices, ResourceState::Vertex);
+        commands->uploadBuffer(*mesh.indices, 0, indices, ResourceState::Index);
+        mesh.indexCount = static_cast<std::uint32_t>(source.indices.size());
+        meshes.push_back(std::move(mesh));
+    }
+    commands->submitAndWait();
+    return meshes;
+}
 }
 void Mesh::initFromFbxFile(const std::string& path)
 {
@@ -94,26 +117,52 @@ void Mesh::initFromFbxFile(const std::string& path)
 
 void Mesh::initFromFbxFile(const std::string& path, Skyline::RHI::Device& device)
 {
-    using namespace Skyline::RHI;
-    auto geometry = loadGeometry(path);
-    auto commands = device.createCommandContext();
-    commands->begin();
-    std::vector<RhiMesh> meshes;
-    for (const auto& source : geometry)
-    {
-        const auto vertices = std::as_bytes(std::span{source.vertices});
-        const auto indices = std::as_bytes(std::span{source.indices});
-        RhiMesh mesh;
-        mesh.vertices = device.createBuffer({vertices.size(), BufferUsage::Vertex | BufferUsage::CopyDestination});
-        mesh.indices = device.createBuffer({indices.size(), BufferUsage::Index | BufferUsage::CopyDestination});
-        commands->uploadBuffer(*mesh.vertices, 0, vertices, ResourceState::Vertex);
-        commands->uploadBuffer(*mesh.indices, 0, indices, ResourceState::Index);
-        mesh.indexCount = static_cast<std::uint32_t>(source.indices.size());
-        meshes.push_back(std::move(mesh));
-    }
-    commands->submitAndWait();
-    m_rhiMeshes = std::move(meshes);
+    m_rhiMeshes = uploadGeometry(device, loadGeometry(path));
 }
+
+void Mesh::initFromGeometry(std::span<const MeshVertex> vertices, std::span<const std::uint32_t> indices,
+                            Skyline::RHI::Device& device)
+{
+    if (vertices.empty() || indices.empty() || indices.size() % 3 != 0)
+        throw std::invalid_argument("Mesh: Geometry requires vertices and a triangle-list index count.");
+    for (const std::uint32_t index : indices)
+        if (index >= vertices.size())
+            throw std::out_of_range("Mesh: Index exceeds vertex range.");
+
+    Geometry geometry;
+    geometry.vertices.assign(vertices.begin(), vertices.end());
+    geometry.indices.assign(indices.begin(), indices.end());
+
+    std::vector<Geometry> geometries;
+    geometries.push_back(std::move(geometry));
+    m_rhiMeshes = uploadGeometry(device, geometries);
+}
+std::uint32_t Mesh::addVertex(const MeshVertex& vertex)
+{
+    if (m_pendingVertices.size() >= (std::numeric_limits<std::uint32_t>::max)())
+        throw std::length_error("Mesh: Vertex count exceeds the supported size.");
+    m_pendingVertices.push_back(vertex);
+    return static_cast<std::uint32_t>(m_pendingVertices.size() - 1);
+}
+
+void Mesh::addIndex(std::uint32_t index)
+{
+    m_pendingIndices.push_back(index);
+}
+
+void Mesh::addTriangle(std::uint32_t first, std::uint32_t second, std::uint32_t third)
+{
+    addIndex(first);
+    addIndex(second);
+    addIndex(third);
+}
+
+void Mesh::upload(Skyline::RHI::Device& device)
+{
+    // 驗證（空資料、索引數量、索引範圍）集中在 initFromGeometry
+    initFromGeometry(m_pendingVertices, m_pendingIndices, device);
+}
+
 void Mesh::draw(RenderContext& renderContext) const
 {
     // 逐一處理所有子 Mesh

@@ -12,6 +12,7 @@ add_custom_target(DayX_FBX_shader
         "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/fbx.hlsl"
         "$<TARGET_FILE_DIR:DayX_FBX>/assets/shaders/fbx.hlsl"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../assets/shaders/fbx.hlsl"
+    JOB_POOL skyline_shared_output
 )
 add_dependencies(DayX_FBX DayX_FBX_shader)
 

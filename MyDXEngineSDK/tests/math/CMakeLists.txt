@@ -3,6 +3,10 @@ add_executable(SkylineMathTests
     vector3_test.cpp
     vector4_test.cpp
     matrix_test.cpp
+    ray_test.cpp
+    aabb_test.cpp
+    sphere_test.cpp
+    obb_test.cpp
     ../../math/vector.cpp
 )
 

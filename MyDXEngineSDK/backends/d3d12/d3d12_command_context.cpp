@@ -59,11 +59,23 @@ void CommandContext::begin()
     resetState();
 }
 
-void CommandContext::beginExternal(const RHI::AttachmentLayout& attachments)
+void CommandContext::beginExternal(const RHI::AttachmentLayout& attachments, D3D12_CPU_DESCRIPTOR_HANDLE backBufferRtv,
+                                   D3D12_CPU_DESCRIPTOR_HANDLE backBufferDsv)
 {
     if (m_recording) throw std::logic_error("CommandContext: A frame is already recording.");
     resetState();
     m_targets = attachments;
+    m_backBufferLayout = attachments;
+    m_backBufferRtv = backBufferRtv;
+    m_backBufferDsv = backBufferDsv;
+}
+
+void CommandContext::setBackBufferTarget()
+{
+    requireRecording();
+    if (!m_external) throw std::logic_error("CommandContext: Only frame commands can bind the back buffer.");
+    m_commands->OMSetRenderTargets(1, &m_backBufferRtv, FALSE, &m_backBufferDsv);
+    m_targets = m_backBufferLayout;
 }
 
 void CommandContext::completeExternal()

@@ -8,6 +8,17 @@
 HWND g_hWnd = nullptr;
 WindowMessageHandler g_windowMessageHandler = nullptr;
 
+namespace
+{
+// 儲存尚未被取走的滑鼠左鍵點擊座標
+struct PendingClick
+{
+    bool pending = false;
+    int x = 0;
+    int y = 0;
+} g_pendingClick;
+} // namespace
+
 LRESULT CALLBACK MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (g_windowMessageHandler != nullptr)
@@ -21,6 +32,10 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
+        break;
+    case WM_LBUTTONDOWN:
+        // lParam 的低、高 word 是 Client 區的像素座標（以 short 解讀以支援負值）
+        g_pendingClick = {true, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam))};
         break;
     case WM_SIZE:
         if (g_graphicsEngine != nullptr && wParam != SIZE_MINIMIZED)
@@ -107,4 +122,15 @@ bool dispatchWindowMessage()
 void setWindowMessageHandler(WindowMessageHandler handler) noexcept
 {
     g_windowMessageHandler = handler;
+}
+
+bool consumeMouseClick(int& x, int& y) noexcept
+{
+    if (!g_pendingClick.pending)
+        return false;
+
+    x = g_pendingClick.x;
+    y = g_pendingClick.y;
+    g_pendingClick.pending = false;
+    return true;
 }

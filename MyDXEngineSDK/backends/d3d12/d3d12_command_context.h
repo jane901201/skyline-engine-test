@@ -25,6 +25,7 @@ public:
     void setPrimitiveTopology(RHI::PrimitiveType primitive) override;
     void setViewport(const RHI::Viewport& viewport, const RHI::Scissor& scissor) override;
     void setRenderTarget(const RHI::Texture& color, const RHI::Texture* depth) override;
+    void setBackBufferTarget() override;
     void clearColor(const RHI::Texture& color, const std::array<float, 4>& value) override;
     void clearDepth(const RHI::Texture& depth, float value) override;
     void transition(const RHI::Buffer& buffer, RHI::ResourceState after) override;
@@ -38,7 +39,8 @@ public:
     void draw(UINT count, UINT instances, UINT first) override;
     void drawIndexed(UINT count, UINT instances, UINT first, INT offset) override;
     void dispatch(UINT x, UINT y, UINT z) override;
-    void beginExternal(const RHI::AttachmentLayout& attachments);
+    void beginExternal(const RHI::AttachmentLayout& attachments, D3D12_CPU_DESCRIPTOR_HANDLE backBufferRtv,
+                       D3D12_CPU_DESCRIPTOR_HANDLE backBufferDsv);
     void completeExternal();
 #ifdef SKYLINE_ENABLE_TRACY
     void setProfiler(TracyD3D12Ctx context) noexcept { m_profiler = context; }
@@ -79,6 +81,9 @@ private:
     UINT64 m_vertices = 0, m_indices = 0;
     RHI::PipelineKind m_kind = RHI::PipelineKind::Graphics;
     RHI::AttachmentLayout m_targets{}, m_expected{};
+    // Frame 命令專用：保存 Back Buffer 的描述元與配置，供 setBackBufferTarget() 還原。
+    RHI::AttachmentLayout m_backBufferLayout{};
+    D3D12_CPU_DESCRIPTOR_HANDLE m_backBufferRtv{}, m_backBufferDsv{};
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_layout;
     std::vector<Microsoft::WRL::ComPtr<IUnknown>> m_natives;
     std::vector<std::shared_ptr<const RHI::DeviceObject>> m_objects;

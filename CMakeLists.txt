@@ -41,6 +41,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # 載入自訂的 Compiler 與 Linker 相關 CMake 設定
 include(CompilerAndLinker.cmake)
 
+# 所有範例與測試的 POST_BUILD 都會把 DLL 與 assets 複製到同一個 bin/ 目錄。
+# Ninja 會平行連結多個 Target，同時對同一個目錄做 copy_directory 會互相搶檔案，
+# 造成間歇性的 "Error copying directory ... Permission denied"。
+# 這裡建立深度為 1 的 Job Pool，讓這些「連結 + 複製」步驟依序執行（僅 Ninja 生效，其他產生器會忽略）。
+set_property(GLOBAL APPEND PROPERTY JOB_POOLS skyline_shared_output=1)
+
 find_package(directxmath CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(directx-dxc CONFIG REQUIRED)
@@ -62,6 +68,9 @@ endif()
 
 # 定義一個函式，在指定 Target 建置完成後自動複製其執行時需要的 DLL
 function(copy_runtime_dependencies target)
+   # POST_BUILD 屬於連結步驟，放進同一個 Pool 以避免多個 Target 同時寫入 bin/
+   set_property(TARGET ${target} PROPERTY JOB_POOL_LINK skyline_shared_output)
+
    add_custom_command(
            TARGET ${target}
            POST_BUILD
@@ -91,6 +100,7 @@ add_subdirectory(iTHelpContest30/DayX_Pass)
 add_subdirectory(iTHelpContest30/DayX_MVP)
 add_subdirectory(iTHelpContest30/DayX_Cloud)
 add_subdirectory(iTHelpContest30/DayX_ColorBlock)
+add_subdirectory(iTHelpContest30/dayx_block_select)
 add_subdirectory(iTHelpContest30/DayX_ImGui)
 add_subdirectory(iTHelpContest30/DayX_ComputeShader)
 add_subdirectory(iTHelpContest30/DayX_Fbm)

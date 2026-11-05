@@ -24,6 +24,8 @@ public:
     virtual void setPrimitiveTopology(PrimitiveType primitive) = 0;
     virtual void setViewport(const Viewport& viewport, const Scissor& scissor) = 0;
     virtual void setRenderTarget(const Texture& color, const Texture* depth = nullptr) = 0;
+    // 僅限 Frame 命令：把輸出重新綁回交換鏈 Back Buffer（離屏繪製後回到螢幕時使用）。
+    virtual void setBackBufferTarget() = 0;
     virtual void clearColor(const Texture& color, const std::array<float, 4>& value) = 0;
     virtual void clearDepth(const Texture& depth, float value = 1) = 0;
     virtual void transition(const Buffer& buffer, ResourceState after) = 0;

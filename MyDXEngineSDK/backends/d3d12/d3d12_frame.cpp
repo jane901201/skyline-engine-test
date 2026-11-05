@@ -435,7 +435,7 @@ void FrameBackend::beginRender()
         0,
         0,
         nullptr);
-    m_rhiCommands->beginExternal(getBackBufferLayout());
+    m_rhiCommands->beginExternal(getBackBufferLayout(), rtvHandle, dsvHandle);
     m_frameActive = true;
 }
 
