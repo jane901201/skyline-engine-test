@@ -47,10 +47,27 @@ add_library(MyDXEngineSDK SHARED
         math/vector.cpp
         ui/imgui_system.h
         ui/imgui_system.cpp
+        audio/audio_types.h
+        audio/audio_device.h
+        audio/audio_device.cpp
+        backends/miniaudio/miniaudio_device.h
+        backends/miniaudio/miniaudio_device.cpp
+        input/input_types.h
+        input/input_state.h
+        input/input_device.h
+        input/input_device.cpp
+        backends/win32/win32_input_device.h
+        backends/win32/win32_input_device.cpp
         core/skyline_api.h
 )
 
 target_compile_definitions(MyDXEngineSDK PRIVATE MYDXENGINESDK_BUILD)
+
+# miniaudio.h 只在 miniaudio 後端的 .cpp 內使用，不需要暴露給使用 SDK 的 Target。
+target_include_directories(MyDXEngineSDK PRIVATE ${MINIAUDIO_INCLUDE_DIRS})
+
+# Win32 輸入後端使用 SetWindowSubclass，需要連結 comctl32。
+target_link_libraries(MyDXEngineSDK PRIVATE comctl32)
 
 # 為 MyDXEngineSDK 建立命名空間形式的別名，讓其他 Target 可以用 MyDXEngineSDK::MyDXEngineSDK 連結。
 add_library(MyDXEngineSDK::MyDXEngineSDK ALIAS MyDXEngineSDK)

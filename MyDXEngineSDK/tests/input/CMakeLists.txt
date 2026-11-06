@@ -1,0 +1,6 @@
+add_executable(SkylineInputTests input_state_test.cpp win32_input_device_test.cpp)
+target_compile_features(SkylineInputTests PRIVATE cxx_std_20)
+target_link_libraries(SkylineInputTests PRIVATE Catch2::Catch2WithMain MyDXEngineSDK::MyDXEngineSDK)
+copy_runtime_dependencies(SkylineInputTests)
+# Win32 測試使用不顯示的視窗與 SendMessage 模擬輸入，不需要真實的輸入裝置或 GPU
+catch_discover_tests(SkylineInputTests PROPERTIES LABELS "input")

@@ -62,6 +62,9 @@ find_package(gflags CONFIG REQUIRED)
 find_package(glog CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
+# miniaudio 在 vcpkg 中是單一標頭檔，沒有 CMake Config，只需要找到標頭檔所在目錄
+find_path(MINIAUDIO_INCLUDE_DIRS "miniaudio.h" REQUIRED)
+
 if(SKYLINE_ENABLE_TRACY)
    find_package(Tracy CONFIG REQUIRED)
 endif()
@@ -123,4 +126,6 @@ if(BUILD_TESTING)
    add_subdirectory(MyDXEngineSDK/tests/math)
    add_subdirectory(MyDXEngineSDK/tests/render)
    add_subdirectory(MyDXEngineSDK/tests/rhi)
+   add_subdirectory(MyDXEngineSDK/tests/audio)
+   add_subdirectory(MyDXEngineSDK/tests/input)
 endif()

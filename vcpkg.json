@@ -12,6 +12,7 @@
     "directxmath",
     "directxtk12",
     "glog",
+    "miniaudio",
     {
       "name": "imgui",
       "features": [
