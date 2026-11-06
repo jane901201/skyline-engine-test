@@ -58,6 +58,19 @@ add_library(MyDXEngineSDK SHARED
         input/input_device.cpp
         backends/win32/win32_input_device.h
         backends/win32/win32_input_device.cpp
+        scene/transform.h
+        scene/camera.h
+        scene/scene.h
+        scene/fly_camera.h
+        scene/euler.h
+        gameplay/fly_camera_behaviour.h
+        gameplay/animator_behaviour.h
+        gameplay/game_time.h
+        gameplay/behaviour.h
+        gameplay/game_world.h
+        animation/animation_clip.h
+        animation/animator.h
+        animation/skeleton.h
         core/skyline_api.h
 )
 
