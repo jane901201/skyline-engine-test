@@ -32,12 +32,12 @@ class State
     {
         return m_frameKeyDown.test(index(key));
     }
-    // 這個 Frame 內剛被按下
+    /// 這個 Frame 內剛被按下
     [[nodiscard]] bool wasPressed(Key key) const noexcept
     {
         return m_framePressed.test(index(key));
     }
-    // 這個 Frame 內剛被放開
+    /// 這個 Frame 內剛被放開
     [[nodiscard]] bool wasReleased(Key key) const noexcept
     {
         return m_frameReleased.test(index(key));
@@ -56,17 +56,17 @@ class State
         return m_frameMouseReleased.test(index(button));
     }
 
-    // 滑鼠在視窗 Client 區的位置（像素）
+    /// 滑鼠在視窗 Client 區的位置（像素）
     [[nodiscard]] const Vector2& mousePosition() const noexcept
     {
         return m_frameMousePosition;
     }
-    // 這個 Frame 的滑鼠位移（來自裝置的原始位移，不受螢幕邊界限制）
+    /// 這個 Frame 的滑鼠位移（來自裝置的原始位移，不受螢幕邊界限制）
     [[nodiscard]] const Vector2& mouseDelta() const noexcept
     {
         return m_frameMouseDelta;
     }
-    // 這個 Frame 的滾輪位移，單位為格數，向前滾為正
+    /// 這個 Frame 的滾輪位移，單位為格數，向前滾為正
     [[nodiscard]] float mouseWheel() const noexcept
     {
         return m_frameMouseWheel;

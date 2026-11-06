@@ -20,6 +20,9 @@ option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
 option(SKYLINE_ENABLE_TRACY "Enable Tracy CPU and D3D12 GPU profiling" OFF)
 
+# 是否建立 Doxygen 文件目標（docs），預設關閉，沒有安裝 Doxygen 也不影響引擎建置
+option(SKYLINE_BUILD_DOCS "Create the 'docs' target that generates API documentation with Doxygen" OFF)
+
 # 指定專案使用 C++17。
 set(CMAKE_CXX_STANDARD 17)
 
@@ -111,6 +114,41 @@ add_subdirectory(iTHelpContest30/DayX_FBX)
 add_subdirectory(iTHelpContest30/DayX_PBR)
 add_subdirectory(iTHelpContest30/DayX_Raymarching)
 add_subdirectory(iTHelpContest30/dayx_texture)
+
+if(SKYLINE_BUILD_DOCS)
+   # 開啟選項卻找不到 Doxygen 時直接報錯，避免使用者以為已經有文件目標
+   find_package(Doxygen REQUIRED)
+
+   set(DOXYGEN_PROJECT_NAME "SkylineEngine")
+   set(DOXYGEN_PROJECT_BRIEF "D3D12 rendering engine")
+   set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/docs")
+   set(DOXYGEN_INPUT_ENCODING UTF-8)
+   set(DOXYGEN_OUTPUT_LANGUAGE English)
+
+   # 只掃描標頭檔（公開 API 都在標頭檔），測試與 Shader 不納入
+   set(DOXYGEN_RECURSIVE YES)
+   set(DOXYGEN_FILE_PATTERNS "*.h")
+   set(DOXYGEN_EXCLUDE_PATTERNS "*/tests/*" "*/shaders/*")
+
+   # 目前多數標頭檔尚未補註解，先列出所有成員，之後補完再改回 NO
+   set(DOXYGEN_EXTRACT_ALL YES)
+   set(DOXYGEN_WARN_IF_UNDOCUMENTED NO)
+
+   # 匯出巨集不應出現在函式簽章中
+   set(DOXYGEN_MACRO_EXPANSION YES)
+   set(DOXYGEN_EXPAND_ONLY_PREDEF YES)
+   set(DOXYGEN_PREDEFINED "SKYLINE_API=")
+
+   # 不依賴 Graphviz，需要類別圖時再改成 YES
+   set(DOXYGEN_HAVE_DOT NO)
+   set(DOXYGEN_SOURCE_BROWSER NO)
+   set(DOXYGEN_GENERATE_LATEX NO)
+
+   doxygen_add_docs(docs
+      "${CMAKE_SOURCE_DIR}/MyDXEngineSDK"
+      COMMENT "Generating SkylineEngine API documentation"
+   )
+endif()
 
 include(CTest)
 

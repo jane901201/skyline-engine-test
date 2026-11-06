@@ -20,9 +20,9 @@ class SKYLINE_API Device
     Device(const Device&) = delete;
     Device& operator=(const Device&) = delete;
 
-    // 結算這個 Frame 的輸入，必須每個 Frame 呼叫一次
+    /// 結算這個 Frame 的輸入，必須每個 Frame 呼叫一次
     virtual void update() = 0;
-    // 最近一次 update() 的輸入快照
+    /// 最近一次 update() 的輸入快照
     [[nodiscard]] virtual const State& state() const noexcept = 0;
 
   protected:
