@@ -65,7 +65,13 @@ add_library(MyDXEngineSDK SHARED
         scene/camera.h
         scene/scene.h
         scene/fly_camera.h
+        core/primitive_mesh.h
+        core/primitive_mesh.cpp
+        core/model_importer.h
+        core/model_importer.cpp
         scene/euler.h
+        core/render_pass/scene_renderer.h
+        core/render_pass/scene_renderer.cpp
         gameplay/fly_camera_behaviour.h
         gameplay/animator_behaviour.h
         gameplay/rigid_body_behaviour.h
@@ -101,6 +107,10 @@ add_library(MyDXEngineSDK::MyDXEngineSDK ALIAS MyDXEngineSDK)
 
 # 指定 MyDXEngineSDK 使用 C++20，且這個需求會傳遞給連結它的 Target。
 target_compile_features(MyDXEngineSDK PUBLIC cxx_std_20)
+
+# 使用 SDK 的專案若先包含 Windows.h，其 min / max 巨集會破壞 SDK 標頭（std::min、AABB 的 min / max 成員等），
+# 所以讓所有使用者都取得 NOMINMAX。
+target_compile_definitions(MyDXEngineSDK PUBLIC NOMINMAX)
 
 # 指定 MyDXEngineSDK 使用 pch.h 作為預編譯標頭，以減少重複編譯時間。
 target_precompile_headers(MyDXEngineSDK PRIVATE

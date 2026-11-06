@@ -12,7 +12,10 @@
 #include <sdkddkver.h>
 
 // Use the C++ standard templated min/max
+// 使用 SDK 的專案會由 CMake 的 PUBLIC 定義取得 NOMINMAX，所以這裡要避免重複定義
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
 // DirectX apps don't need GDI
 #define NODRAWTEXT

@@ -122,6 +122,7 @@ add_subdirectory(iTHelpContest30/dayx_physics)
 add_subdirectory(iTHelpContest30/dayx_scene)
 add_subdirectory(iTHelpContest30/dayx_animation)
 add_subdirectory(iTHelpContest30/dayx_gameplay)
+add_subdirectory(iTHelpContest30/dayx_scene_view)
 
 if(SKYLINE_BUILD_DOCS)
    # 開啟選項卻找不到 Doxygen 時直接報錯，避免使用者以為已經有文件目標
