@@ -30,6 +30,16 @@ public:
     void endWindow();
     bool colorSliders(const char* label, float color[3]);
 
+    /// <summary>
+    /// 目前的 ImGuiContext（以 void* 回傳，避免標頭依賴 imgui.h）。
+    /// </summary>
+    /// <remarks>
+    /// ImGui 以靜態函式庫連結進 SDK 的 DLL，使用端若自己也連結 imgui 並直接呼叫 ImGui::，
+    /// 會用到自己那份全域狀態而沒有 Context。使用端要在 initialize 之後呼叫
+    /// ImGui::SetCurrentContext(static_cast<ImGuiContext*>(context()))，之後才能直接使用 ImGui API。
+    /// </remarks>
+    [[nodiscard]] void* context() const noexcept;
+
   private:
     static constexpr UINT DescriptorCount = 32;
 

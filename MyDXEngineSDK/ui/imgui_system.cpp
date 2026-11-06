@@ -171,6 +171,12 @@ void ImGuiSystem::endWindow()
     ImGui::End();
 }
 
+// 回傳目前的 ImGui context，讓使用端共用同一份 ImGui 狀態
+void* ImGuiSystem::context() const noexcept
+{
+    return ImGui::GetCurrentContext();
+}
+
 // 建立控制 RGB 三個色彩分量的 slider
 bool ImGuiSystem::colorSliders(const char* label, float color[3])
 {
