@@ -58,6 +58,9 @@ add_library(MyDXEngineSDK SHARED
         input/input_device.cpp
         backends/win32/win32_input_device.h
         backends/win32/win32_input_device.cpp
+        physics/physics_types.h
+        physics/physics_world.h
+        physics/physics_world.cpp
         scene/transform.h
         scene/camera.h
         scene/scene.h
@@ -65,16 +68,27 @@ add_library(MyDXEngineSDK SHARED
         scene/euler.h
         gameplay/fly_camera_behaviour.h
         gameplay/animator_behaviour.h
+        gameplay/rigid_body_behaviour.h
         gameplay/game_time.h
         gameplay/behaviour.h
         gameplay/game_world.h
         animation/animation_clip.h
         animation/animator.h
         animation/skeleton.h
+        backends/jolt/jolt_physics_world.h
         core/skyline_api.h
+        $<TARGET_OBJECTS:SkylineJoltBackend>
 )
 
 target_compile_definitions(MyDXEngineSDK PRIVATE MYDXENGINESDK_BUILD)
+
+# Jolt 後端獨立成 Object Library，原因：
+# 1. Jolt 的 vcpkg 套件以 AVX2 編譯，使用端必須用相同指令集（否則 RegisterTypes 會中止程式），
+#    把 /arch:AVX2 限制在這個 Target，不會影響其他引擎程式碼與使用 SDK 的範例。
+# 2. Jolt 的標頭與型別不會外洩到 SDK 的公開標頭。
+# 它的物件檔以 $<TARGET_OBJECTS:> 併入 MyDXEngineSDK（Object Library 定義在檔案最後）。
+# Jolt.lib 只以 LINK_ONLY 連結，避免它的編譯選項與定義傳遞給 MyDXEngineSDK。
+target_link_libraries(MyDXEngineSDK PRIVATE $<LINK_ONLY:Jolt::Jolt>)
 
 # miniaudio.h 只在 miniaudio 後端的 .cpp 內使用，不需要暴露給使用 SDK 的 Target。
 target_include_directories(MyDXEngineSDK PRIVATE ${MINIAUDIO_INCLUDE_DIRS})
@@ -120,4 +134,24 @@ target_link_libraries(MyDXEngineSDK PUBLIC
 if(SKYLINE_ENABLE_TRACY)
         target_link_libraries(MyDXEngineSDK PUBLIC Tracy::TracyClient)
         target_compile_definitions(MyDXEngineSDK PUBLIC SKYLINE_ENABLE_TRACY)
+endif()
+
+# Jolt Physics 後端：只編譯成物件檔併入 MyDXEngineSDK.dll（見上方說明）。
+add_library(SkylineJoltBackend OBJECT
+        backends/jolt/jolt_physics_world.h
+        backends/jolt/jolt_physics_world.cpp
+)
+
+# 後端的函式要從 DLL 匯出，所以需要和 MyDXEngineSDK 相同的匯出定義
+target_compile_definitions(SkylineJoltBackend PRIVATE MYDXENGINESDK_BUILD)
+target_compile_features(SkylineJoltBackend PRIVATE cxx_std_20)
+target_include_directories(SkylineJoltBackend PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/core
+)
+target_link_libraries(SkylineJoltBackend PRIVATE Jolt::Jolt Microsoft::DirectXMath)
+
+# Jolt 的 vcpkg 套件預設以 AVX2 編譯，使用端必須使用相同的指令集設定
+if(MSVC)
+        target_compile_options(SkylineJoltBackend PRIVATE /arch:AVX2)
 endif()

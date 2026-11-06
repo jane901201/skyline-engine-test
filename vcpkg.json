@@ -12,6 +12,12 @@
     "directxmath",
     "directxtk12",
     "glog",
+    {
+      "name": "joltphysics",
+      "features": [
+        "rtti"
+      ]
+    },
     "miniaudio",
     {
       "name": "imgui",

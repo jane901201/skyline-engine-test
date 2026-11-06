@@ -68,6 +68,10 @@ find_package(imgui CONFIG REQUIRED)
 # miniaudio 在 vcpkg 中是單一標頭檔，沒有 CMake Config，只需要找到標頭檔所在目錄
 find_path(MINIAUDIO_INCLUDE_DIRS "miniaudio.h" REQUIRED)
 
+# Jolt Physics 由 vcpkg 提供（靜態函式庫，CRT 連結方式跟隨 triplet）。
+# 啟用 rtti 功能，與本專案預設開啟 RTTI 的編譯設定一致。
+find_package(Jolt CONFIG REQUIRED)
+
 if(SKYLINE_ENABLE_TRACY)
    find_package(Tracy CONFIG REQUIRED)
 endif()
@@ -114,6 +118,7 @@ add_subdirectory(iTHelpContest30/DayX_FBX)
 add_subdirectory(iTHelpContest30/DayX_PBR)
 add_subdirectory(iTHelpContest30/DayX_Raymarching)
 add_subdirectory(iTHelpContest30/dayx_texture)
+add_subdirectory(iTHelpContest30/dayx_physics)
 add_subdirectory(iTHelpContest30/dayx_scene)
 add_subdirectory(iTHelpContest30/dayx_animation)
 add_subdirectory(iTHelpContest30/dayx_gameplay)
@@ -169,6 +174,7 @@ if(BUILD_TESTING)
    add_subdirectory(MyDXEngineSDK/tests/rhi)
    add_subdirectory(MyDXEngineSDK/tests/audio)
    add_subdirectory(MyDXEngineSDK/tests/input)
+   add_subdirectory(MyDXEngineSDK/tests/physics)
    add_subdirectory(MyDXEngineSDK/tests/scene)
    add_subdirectory(MyDXEngineSDK/tests/animation)
    add_subdirectory(MyDXEngineSDK/tests/gameplay)

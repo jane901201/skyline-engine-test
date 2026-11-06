@@ -1,0 +1,6 @@
+add_executable(SkylinePhysicsTests physics_world_test.cpp)
+target_compile_features(SkylinePhysicsTests PRIVATE cxx_std_20)
+target_link_libraries(SkylinePhysicsTests PRIVATE Catch2::Catch2WithMain MyDXEngineSDK::MyDXEngineSDK)
+copy_runtime_dependencies(SkylinePhysicsTests)
+# 物理測試只使用公開介面，不需要 GPU 或視窗
+catch_discover_tests(SkylinePhysicsTests PROPERTIES LABELS "physics")
